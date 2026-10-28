@@ -1,0 +1,117 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          String   @id
+  displayName String
+  email       String   @unique
+  roles       String   // JSON string array e.g. ["DONOR", "ADMIN"]
+  activeRole  String
+  helperOptIn Boolean  @default(false)
+  avatar      String?
+  createdAt   DateTime @default(now())
+}
+
+model Donation {
+  id                   String   @id
+  donorId              String
+  category             String
+  description          String
+  quantity             Int
+  unit                 String
+  allocatedQty         Int      @default(0)
+  deliveredQty         Int      @default(0)
+  pickupAddress        String
+  pickupLat            Float
+  pickupLng            Float
+  availableFromUtc     String
+  expiryUtc            String
+  handlingInstructions String?
+  requiredCapabilities String   // JSON string array
+  mode                 String   @default("VOLUNTEER")
+  status               String   @default("PUBLISHED")
+  createdAtUtc         String
+}
+
+model ReceivingSite {
+  id                 String  @id
+  orgName            String
+  name               String
+  address            String
+  lat                Float
+  lng                Float
+  status             String  @default("OPEN")
+  verification       String  @default("VERIFIED")
+  acceptedCategories String  // JSON string array
+  capabilities       String  // JSON record
+  demand             String  // JSON array of demand objects
+}
+
+model DeliveryTask {
+  id                 String   @id
+  donationId         String
+  siteId             String
+  siteName           String?
+  quantity           Int
+  status             String   @default("OPEN")
+  claimedBy          String?
+  claimedByName      String?
+  claimExpiresAtUtc  String?
+  pickupDeadlineUtc  String?
+  etaMinutes         Int?
+  etaSource          String?  @default("mock")
+  reroute            String?  // JSON object
+  assignmentReason   String?  // JSON object
+  createdAt          DateTime @default(now())
+}
+
+model DeliveryEvent {
+  id           Int      @id @default(autoincrement())
+  taskId       String?
+  donationId   String
+  type         String
+  actor        String?
+  actorName    String?
+  payload      String   // JSON string
+  createdAtUtc String
+}
+
+model LedgerEntry {
+  id           String   @id
+  userId       String
+  creditType   String
+  eventType    String
+  amount       Int
+  multiplier   Float    @default(1.0)
+  subjectId    String
+  createdAtUtc String
+  reverses     String?
+}
+
+model OpenGateListing {
+  id           String @id
+  donationId   String
+  venue        String
+  lat          Float
+  lng          Float
+  opensAtUtc   String
+  closesAtUtc  String
+  remainingQty Int
+  status       String @default("ACTIVE")
+  instructions String?
+}
+
+model RiderAvailability {
+  userId       String  @id
+  isAvailable  Boolean @default(true)
+  capacityQty  Int     @default(40)
+  capacityUnit String  @default("meals")
+  hasColdBag   Boolean @default(true)
+  radiusKm     Float   @default(15.0)
+}
